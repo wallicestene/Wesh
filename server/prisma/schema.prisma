@@ -1,0 +1,80 @@
+// This is your Prisma schema file,
+// learn more about it in the docs: https://pris.ly/d/prisma-schema
+
+// Get a free hosted Postgres database in seconds: `npx create-db`
+
+generator client {
+  provider = "prisma-client"
+  output   = "../generated/prisma"
+}
+
+datasource db {
+  provider = "postgresql"
+}
+model Listing {
+  id          String   @id @default(uuid())
+  
+  // The Anchor
+  url         String   @unique 
+  
+  // The Core Matchers 
+  price       Int
+  bedrooms    Float    
+  bathrooms   Float?
+  
+  // The Location (For Turf.js)
+  latitude    Float
+  longitude   Float
+  address     String?  
+  city        String?
+  neighborhood String? 
+  
+  // The Presentation
+  name        String?  
+  imageUrl    String?  
+  description String?  
+  source      String   // "hotpads", "craigslist", "greystar"
+  
+  // The Trust & Timing Factors (Crucial for multi-source)
+  // isVerified is set at ingest from the source's trust tier (see source-trust.ts):
+  // reputable sources (HotPads, Apartments.com, Zillow) => true; Craigslist => false.
+  isVerified  Boolean  @default(false)
+  availableAt DateTime?
+
+  // Curation (operator-controlled, see /admin). Your judgment, encoded.
+  isFeatured  Boolean  @default(false) // pin to the top of browse results
+  isHidden    Boolean  @default(false) // remove from client-facing browse
+  agentNote   String?                  // private note shown on the detail page
+
+  // State tracking
+  scrapedAt   DateTime @default(now())
+
+  @@index([price])
+  @@index([bedrooms])
+  @@index([neighborhood])
+  @@index([isVerified])
+  @@index([city])
+  // Composite index matching the browse filter shape (neighborhood + price + beds)
+  @@index([neighborhood, price, bedrooms])
+  // Fast default-browse ordering: exclude hidden, feature-first
+  @@index([isHidden, isFeatured])
+}
+
+model Alert {
+  id              String   @id @default(uuid())
+  userEmail       String   
+  
+  // Search Criteria
+  maxPrice        Int?     
+  bedrooms        Int[]    // e.g., [0, 1] for Studio and 1-Bed
+  neighborhoods   String[] // e.g., ["South of Market", "Mission"]
+  mustBeVerified  Boolean  @default(false)
+  
+  // State management
+  isActive        Boolean  @default(true)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  @@index([isActive])
+  @@index([userEmail])
+}
