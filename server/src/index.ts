@@ -5,6 +5,8 @@ import config from "./config/config.js";
 import webhookRoutes from "./routes/webhook.routes.js";
 import searchRoutes from "./routes/search.route.js";
 import chatRoutes from "./routes/chat.routes.js";
+import listingRoutes from "./routes/listing.routes.js";
+
 
 // init express app
 const app = express();
@@ -33,6 +35,7 @@ app.get("/", (req, res) => {
 app.use("/api/webhooks", webhookRoutes);
 app.use("/api/search", searchRoutes);
 app.use("/api/chat", chatRoutes);
+app.use("/api/listings", listingRoutes)
 
 // fallback route for handling unknown routes
 app.use((req, res) => {
